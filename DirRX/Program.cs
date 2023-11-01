@@ -1,11 +1,12 @@
 ﻿using Aspose.Cells;
+using System.Reflection;
 
 namespace Test
 {
    class Program
    {
       static void Main(string[] args)
-      {
+      {         
          var path = @"C:\Users\Rail\Desktop\124\DirectumRX\DirRX\Практика.xlsx"; //string.Empty;
          var action = 0;
          while (action != 1)
