@@ -7,18 +7,18 @@ namespace Test
    {
       static void Main(string[] args)
       {         
-         var path = @"C:\Users\Rail\Desktop\124\DirectumRX\DirRX\Практика.xlsx"; //string.Empty;
+         var path = @"C:\Users\Rail\Desktop\124\DirectumRX\Практика.xlsx"; //string.Empty;
          var action = 0;
          while (action != 1)
          {
             Console.WriteLine("1. Выход");
             Console.WriteLine("2. Запрос на ввод пути до файла с данными (в качестве документа с данными использовать Приложение 2).");
-            Console.WriteLine("3. По наименованию товара выводить информацию о клиентах, заказавших этот товар, " +
-               "с указанием информации по количеству товара, цене и дате заказа.");
-            Console.WriteLine("4. Запрос на изменение контактного лица клиента с указанием параметров: " +
-               "Название организации, ФИО нового контактного лица." +
-               "В результате информация должна быть занесена в этот же документ, " +
-               "в качестве ответа пользователю необходимо выдавать информацию о результате изменений.");
+            Console.WriteLine("3. По наименованию товара выводить информацию о клиентах, заказавших этот товар,");
+            Console.WriteLine("с указанием информации по количеству товара, цене и дате заказа.");
+            Console.WriteLine("4. Запрос на изменение контактного лица клиента с указанием параметров: ");
+            Console.WriteLine("Название организации, ФИО нового контактного лица.");
+            Console.WriteLine("В результате информация должна быть занесена в этот же документ, ");
+            Console.WriteLine("в качестве ответа пользователю необходимо выдавать информацию о результате изменений.");
             Console.WriteLine("5. Запрос на определение золотого клиента, клиента с наибольшим количеством заказов, за указанный год, месяц.");
             Console.WriteLine("Введите цифру с методом: ");
 
@@ -35,10 +35,23 @@ namespace Test
                   OpenFile();
                   Console.WriteLine();
                   break;
+               case 4:
+                  RewriteFile();
+                  break;
                default:
                   break;
             }
          }
+
+         void RewriteFile() //в процессе
+         {
+            Console.WriteLine("Введите данные для изменения контактного лица клиента:");
+            Console.Write("Название организации: ");
+            string? rewrite_client_name = Console.ReadLine();
+            Console.Write("ФИО нового контактного лица: ");
+            string? rewrite_fio = Console.ReadLine();
+         }
+
          void OpenFile()
          {
             string product_name = string.Empty;
