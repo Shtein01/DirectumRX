@@ -10,7 +10,6 @@ namespace Test
          int product_id = 0;
          var product_price = 0.00;
 
-         //int client_id = 0;
          string client_name = string.Empty;
          string client_address = string.Empty;
 
@@ -18,7 +17,7 @@ namespace Test
          string request_product = String.Empty;
          int request_client = 0;
          var request_count = 0.00;
-         DateTime request_date;
+         DateTime request_date = default;
 
          List<string> arr = new List<string>();
 
@@ -47,31 +46,82 @@ namespace Test
                   path = Console.ReadLine();
                   break;
                case 3:
-                  if (path != String.Empty) OpenFile();
+                  if (path != String.Empty) 
+                     Console.WriteLine(OpenFile());
                   else Console.WriteLine("Выберите пункт 2 и введите полный путь до файла.");
                   Console.WriteLine();
                   break;
                case 4:
-                  RewriteFile();
+                  Console.WriteLine(RewriteFile());
                   break;
                default:
                   break;
             }
          }
 
-         void RewriteFile() //в процессе
+         string RewriteFile() 
          {
             Console.WriteLine("Введите данные для изменения контактного лица клиента:");
-            Console.Write("Название организации: ");
-            string? rewrite_client_name = Console.ReadLine();
-            Console.Write("ФИО нового контактного лица: ");
-            string? rewrite_fio = Console.ReadLine();
+            string? rewrite_client_name = string.Empty;
+            string? rewrite_fio = string.Empty;
+
+            while (string.IsNullOrWhiteSpace(rewrite_client_name))
+            {
+               Console.Write("Название организации: ");
+               rewrite_client_name = Console.ReadLine();
+            }
+            while (string.IsNullOrWhiteSpace(rewrite_fio))
+            {
+               Console.Write("ФИО нового контактного лица: ");
+               rewrite_fio = Console.ReadLine();
+            }
+
+            try
+            {
+               // Загрузить файл Excel
+               Workbook wb = new Workbook(path);
+
+               // Получить рабочий лист, используя его индекс
+               Worksheet worksheet = wb.Worksheets[1];
+
+               //Поиск товара по имени в листе "Товары"
+               if (worksheet.Name == "Клиенты")
+               {
+                  arr = ReadArray(worksheet, worksheet.Cells.MaxDataRow, worksheet.Cells.MaxDataColumn, rewrite_client_name);
+                  if (arr.Count == 0)
+                  {
+                     return "Не найден клиент с таким именем!";
+                  }
+                  else
+                  {
+                     string[] names = new string[] { rewrite_fio };
+                     var rewrite_str_bool = int.TryParse(arr[4], out int rewrite_str);
+                     worksheet.Cells.ImportArray(names, rewrite_str, 3, true);
+                     wb.Save(path);
+                  }
+                  //Console.WriteLine(arr[1].ToString());
+               }
+               else return "2 лист книги называться не 'Клиенты'! Проверьте!";
+            }
+            catch (System.IO.FileNotFoundException)
+            {
+               return "File not found";
+            }
+            catch (Exception ex)
+            {
+               return String.Concat("Error: " + ex.Message);
+            }
+            return "Данные изменены.";
          }
 
-         void OpenFile()
+         string OpenFile()
          {
+            bool product_id_bool;
+            bool product_price_bool;
+            bool bool_request_date;
+
             string product_name = string.Empty;
-            while (string.IsNullOrWhiteSpace(product_name)) //.Length == 0)
+            while (string.IsNullOrWhiteSpace(product_name))
             {
                Console.Write("Наименование товара: ");
                product_name = Console.ReadLine();
@@ -84,81 +134,66 @@ namespace Test
 
                // Получить все рабочие листы
                WorksheetCollection collection = wb.Worksheets;
-               Worksheet worksheet;
 
-               // Перебрать все рабочие листы
-               for (int worksheetIndex = 0; worksheetIndex < collection.Count; worksheetIndex++)
+               // Получить рабочий лист "Товары", используя его индекс
+               Worksheet worksheetProduct = wb.Worksheets[0];
+               //Клиенты
+               Worksheet worksheetClient = wb.Worksheets[1];
+               //Заявки
+               Worksheet worksheetRequest = wb.Worksheets[2];
+
+               //Поиск товара по имени в листе "Товары"
+               if (worksheetProduct.Name == "Товары")
                {
-                  // Получить рабочий лист, используя его индекс
-                  worksheet = collection[worksheetIndex];
-
-                  //Поиск товара по имени в листе "Товары"
-                  if (worksheet.Name == "Товары")
+                  arr = ReadArray(worksheetProduct, worksheetProduct.Cells.MaxDataRow, worksheetProduct.Cells.MaxDataColumn, product_name);
+                  if (arr.Count == 0)
                   {
-                     arr = ReadArray(worksheet, worksheet.Cells.MaxDataRow, worksheet.Cells.MaxDataColumn, product_name);
-                     if (arr.Count == 0)
-                     {
-                        Console.WriteLine("Не найден товар с таким именем!");
-                        break;
-                     }
-                     var product_id_bool = int.TryParse(arr[0], out product_id);
-                     var product_price_bool = double.TryParse(arr[3], out product_price);
-                     Console.WriteLine("Товары: Код: " + product_id + ", Товар: " + arr[1] + ", Цена за ед.: " + product_price);
+                     return "Не найден товар с таким именем!";
                   }
-
-                  //Поиск заявки по id товара
-                  if (worksheet.Name == "Заявки")
-                  {
-                     arr = ReadArray(worksheet, worksheet.Cells.MaxDataRow, worksheet.Cells.MaxDataColumn, int_id: product_id);
-                     request_id = int.Parse(arr[0]);
-                     request_product = product_name;
-                     request_client = int.Parse(arr[2]);
-                     request_count = int.Parse(arr[4]);
-                     var bool_request_date = DateTime.TryParse(arr[5], out request_date);
-                     Console.WriteLine("Заявки: Код: " + request_id.ToString() + ", Товар: " + request_product + ", Код клиента: " +
-                        request_client.ToString() + ", Количество: " + request_count.ToString() + ", Дата заявки: " + $"{request_date.ToString("d")}");
-                  }
+                  product_id_bool = int.TryParse(arr[0], out product_id);
+                  product_price_bool = double.TryParse(arr[3], out product_price);
                }
 
-
-               // Перебрать все рабочие листы
-               for (int worksheetIndex = 0; worksheetIndex < collection.Count; worksheetIndex++)
+               //Поиск заявки по id товара
+               if (worksheetRequest.Name == "Заявки")
                {
-                  //Если не был найден товар по имени пропускаю цикл поиска Клиента
-                  if (product_id == 0) break;
+                  arr = ReadArray(worksheetRequest, worksheetRequest.Cells.MaxDataRow, worksheetRequest.Cells.MaxDataColumn, int_id: product_id);
+                  request_id = int.Parse(arr[0]);
+                  request_product = product_name;
+                  request_client = int.Parse(arr[2]);
+                  request_count = int.Parse(arr[4]);
+                  bool_request_date = DateTime.TryParse(arr[5], out request_date);
+               }
 
-                  // Получить рабочий лист, используя его индекс
-                  worksheet = collection[worksheetIndex];
-
-                  //Поиск клиента по id из листа "Заявки"
-                  if (worksheet.Name == "Клиенты")
-                     {
-                        arr = ReadArray(worksheet, worksheet.Cells.MaxDataRow, worksheet.Cells.MaxDataColumn, int_id: request_client);
-                        client_name = arr[1];
-                        client_address = arr[2];
-                        Console.WriteLine("Клиент: Код: " + request_client + ", Наименование организации: " + client_name + ", Адрес: " + client_address);
-                     }
+               //Поиск клиента по id из листа "Заявки"
+               if (worksheetClient.Name == "Клиенты")
+               {
+                  arr = ReadArray(worksheetClient, worksheetClient.Cells.MaxDataRow, worksheetClient.Cells.MaxDataColumn, int_id: request_client);
+                  client_name = arr[1];
+                  client_address = arr[2];
                }
 
                if (request_id == 0 && product_id != 0)
                {
-                  Console.WriteLine("Заявки на данный товар не найдены.");
+                  return "Заявки на данный товар не найдены.";
                }
             }
             catch (System.IO.FileNotFoundException)
             {
-               Console.WriteLine("File not found");
-               return;
+               return "File not found";
             }
             catch (Exception ex)
             {
-               Console.WriteLine("Error: " + ex.Message);
-               //throw ex;
+               return String.Concat("Error: " + ex.Message);
             }
+            return String.Concat("Товары: Код: " + product_id + ", Товар: " + arr[1] + ", Цена за ед.: " + product_price + "\n" +
+               "Заявки: Код: " + request_id.ToString() + ", Товар: " + request_product + ", Код клиента: " +
+                request_client.ToString() + ", Количество: " + request_count.ToString() + ", Дата заявки: " + $"{request_date.ToString("d")}" + "\n" +
+                "Клиент: Код: " + request_client + ", Наименование организации: " + client_name + ", Адрес: " + client_address);
          }
 
          List<string> ReadArray(Worksheet worksheet, int rows, int cols,
-            string? str1 = default, int? int_id = default)
+            string? str1 = default, int? int_id = 0)
          {
             if (worksheet == null)
             {
@@ -175,7 +210,7 @@ namespace Test
                {
                   arr.Add(worksheet.Cells[i, j].Value.ToString());
                }
-               // Записать листы в отдельные таблицы
+               // Записать строку в отдельный лист
                if (worksheet.Name == "Товары")
                {
                   if (arr[1] == str1)
@@ -190,8 +225,13 @@ namespace Test
                }
                if (worksheet.Name == "Клиенты")
                {
-                  if (int.Parse(arr[0]) == int_id)
+                  if (int_id != 0 && int.Parse(arr[0]) == int_id)
                      return arr;
+                  else if (!string.IsNullOrEmpty(str1) && arr[1] == str1)
+                  { 
+                     arr.Add(i.ToString());
+                     return arr;
+                  }
                   else arr.Clear();
                }
             }
